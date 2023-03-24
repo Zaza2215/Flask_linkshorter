@@ -31,7 +31,9 @@ def index():
     if form.validate_on_submit():
         url = form.url.data
         return render_template("index.html", url=url, form=form)
-    flash("Invalid url")
+    elif request.method == "POST":
+        flash("Invalid url")
+
     return render_template("index.html", form=form)
 
 
