@@ -1,10 +1,10 @@
-from flask import Flask, render_template, request, flash
+from flask import Flask, render_template, request, flash, redirect
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 
 from forms import UrlForm
 
-from config import SECRET_KEY
+from config import SECRET_KEY, HOST
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///url.db"
@@ -42,7 +42,7 @@ def index():
     if form.validate_on_submit():
         url_main = form.url.data
 
-        if Url.query.filter_by(url=url_main):
+        if Url.query.filter_by(url=url_main).first():
             print("Url is already exist!")
             url = Url.query.filter_by(url=url_main).first()
             # flash("Url is already exist!")
@@ -52,11 +52,20 @@ def index():
             db.session.add(url)
             db.session.commit()
 
-        return render_template("index.html", url=url, form=form)
+        return render_template("index.html", url=url, form=form, host=HOST)
     elif request.method == "POST":
         flash("Invalid url")
 
     return render_template("index.html", form=form)
+
+
+@app.route("/<int:short_url>")
+def short_url_route(short_url):
+    shorter_url = Url.query.filter_by(url_short=short_url).first()
+    if not shorter_url:
+        flash("There isn't such url")
+    # return render_template("short_url.html", shorter_url=shorter_url)
+    return redirect(shorter_url.url, code=301)
 
 
 if __name__ == "__main__":
